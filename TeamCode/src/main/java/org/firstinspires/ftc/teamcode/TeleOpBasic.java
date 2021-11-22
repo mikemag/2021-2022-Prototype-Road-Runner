@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.RoadRunner.drive.SampleMecanumDrive;
 
 @TeleOp(group="tmp")
@@ -35,14 +36,17 @@ public class TeleOpBasic extends LinearOpMode {
         DigitalChannel sideButton2 = hardwareMap.get(DigitalChannel.class, "sideButton2");
         DigitalChannel armLimitSwitch = hardwareMap.get(DigitalChannel.class, "armLimitSwitch");
         DigitalChannel armLimitSwitch2 = hardwareMap.get(DigitalChannel.class, "armLimitSwitch2");
-        Rev2mDistanceSensor distanceSensor = hardwareMap.get(Rev2mDistanceSensor.class, "distanceSensor");
+//        Rev2mDistanceSensor distanceSensor = hardwareMap.get(Rev2mDistanceSensor.class, "distanceSensor");
 
         waitForStart();
 
         if (isStopRequested()) return;
 
-        // mmmfixme: this is a basic RR example of driving w/ field centric.
-        // - I want this to be integrated with FTCLib.
+//        double distMin = Double.MAX_VALUE;
+//        double distMax = Double.MIN_VALUE;
+//        double distAvg = 0;
+//        long distCnt = 0;
+
         while (opModeIsActive() && !isStopRequested()) {
             FtcDashboard.getInstance().getTelemetry().addData("Sensor tests", "Arm Switch: %s", sideButton.toString());
             telemetry.addData("Sensor tests", "Side button: %s", sideButton.getState()); // mmmfixme: true always
@@ -51,7 +55,7 @@ public class TeleOpBasic extends LinearOpMode {
             telemetry.addData("Sensor tests", "Arm Switch 2: %s", armLimitSwitch2.getState()); // mmmfixme: true normally or disconnected, false when triggered
 
 //            intakeServo.setPower(1.0);
-            duckMotor.setVelocity(1000);
+//            duckMotor.setVelocity(1000);
 
             // Read pose
             Pose2d poseEstimate = drive.getPoseEstimate();
@@ -80,6 +84,15 @@ public class TeleOpBasic extends LinearOpMode {
             telemetry.addData("x", poseEstimate.getX());
             telemetry.addData("y", poseEstimate.getY());
             telemetry.addData("heading", poseEstimate.getHeading());
+
+//            double dist = distanceSensor.getDistance(DistanceUnit.MM);
+//            distMin = Math.min(distMin, dist);
+//            distMax = Math.max(distMax, dist);
+//            distAvg += (dist - distAvg) / Math.min(++distCnt, 10);
+//            telemetry.addData("Loop timinngs", "min/avg/max: %,.2fmm/%,.2fmm/%,.2fmm",
+//                    distMin, distAvg, distMax);
+//            telemetry.addData("Distance sensor", "distance: %f", distanceSensor.getDistance(DistanceUnit.MM));
+
             telemetry.update();
         }
     }
