@@ -19,34 +19,26 @@ public class FTC7760TeleOpDualControllerMode extends FTC7760TeleOpBase {
 
             //Driving input
             roboCentricDriving(-gamepad1.left_stick_y, gamepad1.left_stick_x,
-                    gamepad1.right_stick_x);
+                    gamepad1.right_stick_x, gamepad1.right_trigger > 0.1);
 
             //Manual Quack Wheel input
-            quackWheelManualBlue = gamepad2.a;
-            quackWheelManualRed = gamepad2.y && !gamepad2.a;
-
+            quackWheelManualBlue = gamepad1.a;
+            quackWheelManualRed = gamepad1.y && !gamepad1.a;
             quackWheelManual();
 
             //Single duck Quack Wheel input
-            quackWheelSingleBlue = gamepad2.x;
-            if (gamepad2.b && !gamepad2.x) {
-                quackWheelSingleRed = true;
-            } else {
-                quackWheelSingleBlue = false;
-            }
-
+            quackWheelSingleBlue = gamepad1.x;
+            quackWheelSingleRed = gamepad1.b && !gamepad1.x;
             quackWheelSingle();
 
             //Intake input
-            intakeIn = gamepad1.left_bumper;
-            intakeOut = gamepad1.right_bumper && !gamepad1.left_bumper;
-
-            intake();
+//            intakeIn = gamepad1.left_bumper;
+//            intakeOut = gamepad1.right_bumper && !gamepad1.left_bumper;
+//            intake();
 
             //Arm input
-            armUp = gamepad2.left_bumper;
-            armDown = gamepad2.right_bumper && !gamepad2.left_bumper;
-
+            armUp = gamepad1.dpad_up;
+            armDown = gamepad1.dpad_down;
             armManual();
 
             telemetry();

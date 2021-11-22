@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 //@TeleOp(name="FTC7760 Dual Controllers", group="Linear Opmode")
@@ -25,14 +27,14 @@ public class FTC7760TeleOpBase extends LinearOpMode {
     //Arm raises after intaking if set to true
     public final boolean armRaisesAfterIntaking = true;
     //The height the arm lifts after intaking, if armRaisesAfterIntaking is true
-    public final int armDrivingHeight = -200;  // TODO: make all arm heights positive!!!
+    public final int armDrivingHeight = 50;  // mmmfixme
     //Arm minimum and maximum location, used to stop the arm from moving where it cannot move
     public final int armMinLocation = 0;
-    public final int armMaxLocation = -4000;
+    public final int armMaxLocation = 300; // mmmfixme
     //Base speed of arm movement
-    public final int armIncrement = 17;
+    public final int armIncrement = 1; // mmmfixme
     public ElapsedTime runtime = new ElapsedTime();
-    
+
     /*-----------------------------------------------
     Constants that are not modified during the match:
     -------------------------------------------------*/
@@ -42,6 +44,7 @@ public class FTC7760TeleOpBase extends LinearOpMode {
     public DcMotor rightRearDrive = null;
     public DcMotorEx duckDrive = null;
     public DcMotorEx armDrive = null;
+    private DigitalChannel armLimitSwitch;
     public CRServo intakeDrive = null;
     public BNO055IMU imu = null;
     
@@ -49,7 +52,7 @@ public class FTC7760TeleOpBase extends LinearOpMode {
     Variables used to control the robot that change throughout the match:
     ---------------------------------------------------------------------*/
     //Used to control the drive speed
-    public double SPEED_REDUCER = 1.0;
+//    public double SPEED_REDUCER = 1.0;
 
     //Current quack wheel tick position. Used to spin off a single duck
     public int quackWheelTicks = 0;
@@ -108,9 +111,10 @@ public class FTC7760TeleOpBase extends LinearOpMode {
         leftRearDrive = hardwareMap.get(DcMotor.class, "leftRearDrive");
         rightFrontDrive = hardwareMap.get(DcMotor.class, "rightFrontDrive");
         rightRearDrive = hardwareMap.get(DcMotor.class, "rightRearDrive");
-        duckDrive = hardwareMap.get(DcMotorEx.class, "Quack wheel");
-        armDrive = hardwareMap.get(DcMotorEx.class, "arm");
-        intakeDrive = hardwareMap.get(CRServo.class, "intake");
+        duckDrive = hardwareMap.get(DcMotorEx.class, "duckMotor");
+        armDrive = hardwareMap.get(DcMotorEx.class, "armMotor");
+        intakeDrive = hardwareMap.get(CRServo.class, "intakeServo");
+        armLimitSwitch = hardwareMap.get(DigitalChannel.class, "armLimitSwitch");
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -124,15 +128,33 @@ public class FTC7760TeleOpBase extends LinearOpMode {
         duckDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         duckDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-
         armDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         armDrive.setTargetPosition(0);
         armDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         armDrive.setDirection(DcMotor.Direction.FORWARD);
         armDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         //                                    P     I   D    F
-        armDrive.setVelocityPIDFCoefficients(5.0, 0.1, 2.0, 7.0);
+//        armDrive.setVelocityPIDFCoefficients(5.0, 0.1, 2.0, 7.0);
         // armDrive.setPositionPIDFCoefficients(50.0);
+
+
+        PIDFCoefficients velPIDF = armDrive.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
+        telemetry.addData("Orig velocity PIDF", "%s", velPIDF.toString());
+        PIDFCoefficients posPIDF = armDrive.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
+        telemetry.addData("Orig position PIDF", "%s", posPIDF.toString());
+
+        // Default is 10, 3, 0, 0, LegacyPID
+        armDrive.setVelocityPIDFCoefficients(5.0, 3.0, 0.0, 0.0);
+        // Default is 10, 0.5, 0, 0, LegacyPID
+        armDrive.setPositionPIDFCoefficients(5.0);
+
+        velPIDF = armDrive.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
+        telemetry.addData("New velocity PIDF", "%s", velPIDF.toString());
+        posPIDF = armDrive.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
+        telemetry.addData("New position PIDF", "%s", posPIDF.toString());
+        telemetry.addData("Status", "Started, waiting to go...");
+        telemetry.update();
+
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -141,7 +163,7 @@ public class FTC7760TeleOpBase extends LinearOpMode {
     }
 
     //Robot oriented drive function
-    public void roboCentricDriving(double y, double x, double rx) {
+    public void roboCentricDriving(double y, double x, double rx, boolean goSlow) {
         if (y < 0.1 && y > -0.1) {
             y = 0;
         }
@@ -158,15 +180,16 @@ public class FTC7760TeleOpBase extends LinearOpMode {
         double leftRearDrivePower = (y - x + rx) / denominator;
         double rightFrontDrivePower = (y - x - rx) / denominator;
         double rightRearDrivePower = (y + x - rx) / denominator;
-        if (gamepad1.right_trigger > 0.1) {     //Halves the power going to the drive wheels 
-            SPEED_REDUCER = 0.5;
-        } else {
-            SPEED_REDUCER = 1.0;
+
+        double speedReducer = 1.0;
+        if (goSlow) {
+            speedReducer = 0.5;
         }
-        leftFrontDrive.setPower(leftFrontDrivePower * SPEED_REDUCER);
-        leftRearDrive.setPower(leftRearDrivePower * SPEED_REDUCER);
-        rightFrontDrive.setPower(rightFrontDrivePower * SPEED_REDUCER);
-        rightRearDrive.setPower(rightRearDrivePower * SPEED_REDUCER);
+
+        leftFrontDrive.setPower(leftFrontDrivePower * speedReducer);
+        leftRearDrive.setPower(leftRearDrivePower * speedReducer);
+        rightFrontDrive.setPower(rightFrontDrivePower * speedReducer);
+        rightRearDrive.setPower(rightRearDrivePower * speedReducer);
     }
 
     //Function for manually controlling the Quack Wheel
@@ -181,6 +204,8 @@ public class FTC7760TeleOpBase extends LinearOpMode {
         } else {
             quackWheelSpeed = quackSlowSpeed;
         }
+
+//        duckDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         //Calculates Direction
         if (quackWheelManualBlue) {                       //Normal direction (For red duck wheel I think)
@@ -201,9 +226,11 @@ public class FTC7760TeleOpBase extends LinearOpMode {
         //Set quackWheelSingleBlue or quackWheelSingleRed to true to spin off a single Quack
         if (quackWheelSingleBlue || quackWheelSingleRed) {
             duckDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            quackWheelTicks = 0;
+            duckDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             //Initial slow part
-            while (Math.abs(quackWheelTicks) < quackSuperSpeedTickValue) {
+            while (opModeIsActive() && Math.abs(quackWheelTicks) < quackSuperSpeedTickValue) {
                 if (quackWheelManualBlue || quackWheelManualRed) {
                     break;
                 }
@@ -216,9 +243,9 @@ public class FTC7760TeleOpBase extends LinearOpMode {
             }
 
             //Fast part at the end
-            while ((Math.abs(quackWheelTicks) >= quackSuperSpeedTickValue) &&
-                    (Math.abs(quackWheelTicks) < quackStoppingPoint)
-            ) {
+            while (opModeIsActive() &&
+                    (Math.abs(quackWheelTicks) >= quackSuperSpeedTickValue) &&
+                    (Math.abs(quackWheelTicks) < quackStoppingPoint)) {
                 if (quackWheelManualBlue || quackWheelManualRed) {
                     break;
                 }
@@ -229,6 +256,7 @@ public class FTC7760TeleOpBase extends LinearOpMode {
                 }
                 quackWheelTicks = duckDrive.getCurrentPosition();
             }
+            duckDrive.setVelocity(0);
         }
     }
 
@@ -260,7 +288,6 @@ public class FTC7760TeleOpBase extends LinearOpMode {
 
     //Function which resets minimum arm position to current position
     public void armResetMin() {
-
         armDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         armDrive.setTargetPosition(0);
         armDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -279,20 +306,30 @@ public class FTC7760TeleOpBase extends LinearOpMode {
             armLocationDelta /= 2;
         }
         if (armDown) {
-            armLocation += armLocationDelta;
-        } else if (armUp) {
             armLocation -= armLocationDelta;
+        } else if (armUp) {
+            armLocation += armLocationDelta;
         }
 
-        if (armLocation < armMaxLocation) {
+        //Keeps the arm from moving too much
+        if (armLocation > armMaxLocation) {
             armLocation = armMaxLocation;
-        } else if (armLocation > armMinLocation && !armMinLocationIgnore) {                  //Keeps the arm from moving too much
+        } else if (armLocation < armMinLocation && !armMinLocationIgnore) {
             armLocation = armMinLocation;
         }
 
-        //Sets the arm to the correct position
-        armDrive.setTargetPosition(armLocation);
-        armDrive.setPower(1.0);
+        if (armDown && !armLimitSwitch.getState()) {
+            armDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            armLocation = armMinLocation;
+            armDrive.setTargetPosition(0);
+            armDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            armDrive.setPower(0.0);
+        } else {
+            //Sets the arm to the correct position
+            armDrive.setTargetPosition(armLocation);
+            armDrive.setPower(0.5);
+            //        armDrive.setVelocity(50);
+        }
     }
 
     //Note: armAuto will eventually become a thing
@@ -301,9 +338,9 @@ public class FTC7760TeleOpBase extends LinearOpMode {
     //Function for displaying telemetry
     public void telemetry() {
 
-        telemetry.addData("Duck Wheel Ticks", "%d", quackWheelTicks);
+        telemetry.addData("Duck Wheel Ticks", "%d", duckDrive.getCurrentPosition());
 
-        telemetry.addData("Arm", "Location %d", armLocation);
+        telemetry.addData("Arm", "Target Location %d", armLocation);
         telemetry.addData("Arm", "Current position %d", armDrive.getCurrentPosition());
 
         //Shows the elapsed game time and arm location. Currently not necessary    
