@@ -2,8 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-@TeleOp(name = "FTC7760 Dual Controller Mode", group = "Linear Opmode")
-public class FTC7760TeleOpDualControllerMode extends FTC7760OpBase {
+@TeleOp(name = "Mikemag 7760 Single Controller", group = "Linear Opmode")
+public class Mikemag7760Teleop extends FTC7760OpBase {
 
     @Override
     public void runOpMode() {
@@ -15,18 +15,22 @@ public class FTC7760TeleOpDualControllerMode extends FTC7760OpBase {
 
         while (opModeIsActive()) {
 
+            if (gamepad1.start) {
+                fieldCentricDriving = gamepad1.a;
+            }
+
             // Driving input
             drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x,
                     gamepad1.right_trigger > 0.1);
 
             // Manual Quack Wheel input
-            quackWheelManualBlue = gamepad2.a;
-            quackWheelManualRed = gamepad2.y && !gamepad2.a;
+            quackWheelManualBlue = gamepad1.a;
+            quackWheelManualRed = gamepad1.y && !gamepad1.a;
             quackWheelManual();
 
             // Single duck Quack Wheel input
-            quackWheelSingleBlue = gamepad2.x;
-            quackWheelSingleRed = gamepad2.b && !gamepad2.x;
+            quackWheelSingleBlue = gamepad1.x;
+            quackWheelSingleRed = gamepad1.b && !gamepad1.x;
             quackWheelSingle();
 
             // Intake input
@@ -35,9 +39,9 @@ public class FTC7760TeleOpDualControllerMode extends FTC7760OpBase {
             intake();
 
             // Arm input
-            armUp = gamepad2.left_bumper;
-            armDown = gamepad2.right_bumper && !gamepad2.left_bumper;
-            armManual();
+//            armUp = gamepad1.dpad_up;
+//            armDown = gamepad1.dpad_down && !gamepad1.dpad_up;
+//            armManual();
 
             telemetry();
         }
