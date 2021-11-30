@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.subsystems;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.arcrobotics.ftclib.command.SubsystemBase;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.roadrunner.drive.SampleMecanumDrive;
@@ -27,6 +28,14 @@ public class MecanumDrivetrain extends SubsystemBase {
 
     public Pose2d getPoseEstimate() {
         return drive.getPoseEstimate();
+    }
+
+    public void setMode(DcMotor.RunMode runMode) {
+        drive.setMode(runMode);
+    }
+
+    public void setPoseEstimate(Pose2d poseEstimate) {
+        drive.setPoseEstimate(poseEstimate);
     }
 
 }
