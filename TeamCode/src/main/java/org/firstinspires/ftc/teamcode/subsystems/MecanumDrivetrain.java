@@ -30,8 +30,8 @@ public class MecanumDrivetrain extends SubsystemBase {
         return drive.getPoseEstimate();
     }
 
-    public void setMode(DcMotor.RunMode runMode) {
-        drive.setMode(runMode);
+    public void disableVelocityControl() {
+        drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     public void setPoseEstimate(Pose2d poseEstimate) {

@@ -5,8 +5,8 @@ import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 
+import org.firstinspires.ftc.teamcode.commands.ArmCommands;
 import org.firstinspires.ftc.teamcode.commands.DuckCommands;
 import org.firstinspires.ftc.teamcode.commands.MecanumDriveCommand;
 import org.firstinspires.ftc.teamcode.subsystems.Arm;
@@ -32,14 +32,16 @@ public class TeleOpRed extends CommandOpMode {
         drive = new MecanumDrivetrain(hardwareMap, true);
         intake = new Intake(hardwareMap);
         duckWheel = new DuckWheel(hardwareMap, alliance);
-        arm = new Arm(hardwareMap);
+        arm = new Arm(hardwareMap, telemetry);
         register(drive, intake, duckWheel, arm);
+
+        arm.armResetMin();
 
         // Driving
 
         // We want to turn off velocity control for TeleOp. Velocity control per wheel is not
         // necessary outside of motion profiled auto.
-        drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        drive.disableVelocityControl();
 
         // Retrieve our pose from the end of the last Autonomous mode, if any.
         drive.setPoseEstimate(AutoToTeleStorage.currentPose);
@@ -61,16 +63,17 @@ public class TeleOpRed extends CommandOpMode {
         gamepad.getGamepadButton(GamepadKeys.Button.Y).whenPressed(new DuckCommands.DeliverSingleDuck(duckWheel));
 
         // Arm
-        gamepad.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(() -> arm.raiseArm()).whenReleased(() -> arm.stop());
-        gamepad.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(() -> arm.lowerArm()).whenReleased(() -> arm.stop());
-        gamepad.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(() -> arm.presetUp());
-        gamepad.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(() -> arm.presetDown());
+        gamepad.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenHeld(new ArmCommands.ArmUp(arm));
+        gamepad.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenHeld(new ArmCommands.ArmDown(arm));
+        gamepad.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(new ArmCommands.ArmNextPreset(arm, ArmCommands.ArmNextPreset.Direction.UP));
+        gamepad.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(new ArmCommands.ArmNextPreset(arm, ArmCommands.ArmNextPreset.Direction.DOWN));
 
         // mmmfixme:
         //  - telemetry
         //    - want dual telemetry output
         //    - let any command or subsystem add telemetry
         //    - have some standard things, like alliance color, field-centric, arm position, etc.
+        //    - do in SubSystem::periodic?
         //  - vision
         //  - arm extension in/out
         //  - autos -> tele: preselect the right one, pass pose.

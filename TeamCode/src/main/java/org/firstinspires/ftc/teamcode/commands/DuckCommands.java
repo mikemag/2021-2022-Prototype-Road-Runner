@@ -33,6 +33,7 @@ public class DuckCommands {
         final DuckWheel duckWheel;
 
         boolean done;
+        int startPosition;
 
         // Positions where the quack wheel automatically starts spinning quickly, and then stops
         // spinning; used to spin off a single duck.
@@ -46,16 +47,17 @@ public class DuckCommands {
 
         @Override
         public void initialize() {
-            duckWheel.reset();
+            startPosition = duckWheel.getCurrentPosition();
             duckWheel.runSlowArc();
             done = false;
         }
 
         @Override
         public void execute() {
-            if (duckWheel.getCurrentPosition() >= AUTO_STOP_POSITION) {
+            int pos = duckWheel.getCurrentPosition();
+            if (pos >= startPosition + AUTO_STOP_POSITION) {
                 done = true;
-            } else if (duckWheel.getCurrentPosition() >= AUTO_START_FAST_POSITION) {
+            } else if (pos >= startPosition + AUTO_START_FAST_POSITION) {
                 duckWheel.runFastArc();
             }
         }
