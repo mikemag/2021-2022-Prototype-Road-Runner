@@ -7,8 +7,8 @@ import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import org.firstinspires.ftc.teamcode.commands.DuckCommands;
 import org.firstinspires.ftc.teamcode.commands.MecanumDriveCommand;
-import org.firstinspires.ftc.teamcode.commands.SingleDuckCommand;
 import org.firstinspires.ftc.teamcode.subsystems.Arm;
 import org.firstinspires.ftc.teamcode.subsystems.DuckWheel;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
@@ -56,9 +56,9 @@ public class TeleOpRed extends CommandOpMode {
         gamepad.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(() -> intake.spinIntakeOut()).whenReleased(() -> intake.stop());
 
         // Duck Wheel
-        gamepad.getGamepadButton(GamepadKeys.Button.B).whenPressed(() -> duckWheel.spinForward()).whenReleased(() -> duckWheel.stop());
-        gamepad.getGamepadButton(GamepadKeys.Button.X).whenPressed(() -> duckWheel.spinBackwards()).whenReleased(() -> duckWheel.stop());
-        gamepad.getGamepadButton(GamepadKeys.Button.Y).whenPressed(new SingleDuckCommand(duckWheel));
+        gamepad.getGamepadButton(GamepadKeys.Button.B).whenPressed(new DuckCommands.SpinForward(duckWheel)).whenReleased(new DuckCommands.Stop(duckWheel));
+        gamepad.getGamepadButton(GamepadKeys.Button.X).whenPressed(new DuckCommands.SpinBackwards(duckWheel)).whenReleased(new DuckCommands.Stop(duckWheel));
+        gamepad.getGamepadButton(GamepadKeys.Button.Y).whenPressed(new DuckCommands.DeliverSingleDuck(duckWheel));
 
         // Arm
         gamepad.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(() -> arm.raiseArm()).whenReleased(() -> arm.stop());
