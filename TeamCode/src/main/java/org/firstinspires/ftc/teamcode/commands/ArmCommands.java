@@ -8,41 +8,51 @@ import java.util.Arrays;
 
 public class ArmCommands {
 
-    private static class ArmUpDown extends CommandBase {
+    public static class ArmUp extends CommandBase {
         final Arm arm;
-        final int destination;
 
-        public ArmUpDown(Arm arm, int destination) {
+        public ArmUp(Arm arm) {
             this.arm = arm;
-            this.destination = destination;
             addRequirements(arm);
         }
 
         @Override
         public void initialize() {
-            arm.setPosition(destination);
+            arm.setPosition(Arm.MAX_POSITION);
         }
 
         @Override
         public void end(boolean isInterrupted) {
-            arm.holdCurrentPosition();
+            int p = arm.getCurrentPositionNoCache();
+            // Aim a little farther up than we sense to give a softer landing.
+            arm.setPosition(Math.min(Arm.MAX_POSITION, p + 100));
         }
     }
 
-    public static class ArmUp extends ArmUpDown {
-        public ArmUp(Arm arm) {
-            super(arm, 4000);
-        }
-    }
+    public static class ArmDown extends CommandBase {
+        final Arm arm;
 
-    public static class ArmDown extends ArmUpDown {
         public ArmDown(Arm arm) {
-            super(arm, 0);
+            this.arm = arm;
+            addRequirements(arm);
+        }
+
+        @Override
+        public void initialize() {
+            arm.setPosition(Arm.MIN_POSITION);
+        }
+
+        @Override
+        public void end(boolean isInterrupted) {
+            int p = arm.getCurrentPositionNoCache();
+            // Aim a little farther down than we sense to give a softer landing.
+            arm.setPosition(Math.max(Arm.MIN_POSITION, p - 100));
         }
     }
 
     public static class ArmNextPreset extends CommandBase {
-        private static final int[] presetPositions = {0, 200, 2200, 2800, 3500};
+        //        private static final int[] presetPositions = {0, 200, 2200, 2800, 3500};
+        private static final int[] presetPositions = {20, 200, 400, 600, 800, 1000, 1200, 1400, 1600};
 
         // Factor in a small tolerance to the current position so we don't go from 1999 to 2000.
         private static final int TOLERANCE = 50;
@@ -59,10 +69,7 @@ public class ArmCommands {
 
         @Override
         public void initialize() {
-            // We have to clear the bulk cache since concurrent commands may have populated the cache
-            // with a stale motor position.
-            arm.resetPositionCache();
-            int pos = arm.getCurrentPosition();
+            int pos = arm.getCurrentPositionNoCache();
 
             if (direction == Direction.UP) {
                 // nb: read the doc for binarySearch to understand the negative coding for the

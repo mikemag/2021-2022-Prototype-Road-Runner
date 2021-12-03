@@ -8,9 +8,11 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.commands.ArmCommands;
 import org.firstinspires.ftc.teamcode.commands.DuckCommands;
+import org.firstinspires.ftc.teamcode.commands.ExtensionCommands;
 import org.firstinspires.ftc.teamcode.commands.MecanumDriveCommand;
 import org.firstinspires.ftc.teamcode.subsystems.Arm;
 import org.firstinspires.ftc.teamcode.subsystems.DuckWheel;
+import org.firstinspires.ftc.teamcode.subsystems.Extension;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.MecanumDrivetrain;
 
@@ -24,6 +26,7 @@ public class TeleOpRed extends CommandOpMode {
     Intake intake;
     DuckWheel duckWheel;
     Arm arm;
+    Extension extension;
 
     @Override
     public void initialize() {
@@ -33,9 +36,10 @@ public class TeleOpRed extends CommandOpMode {
         intake = new Intake(hardwareMap);
         duckWheel = new DuckWheel(hardwareMap, alliance);
         arm = new Arm(hardwareMap, telemetry);
-        register(drive, intake, duckWheel, arm);
+        extension = new Extension(hardwareMap, telemetry);
+        register(drive, intake, duckWheel, arm, extension);
 
-        arm.armResetMin();
+        arm.initialize();
 
         // Driving
 
@@ -54,8 +58,8 @@ public class TeleOpRed extends CommandOpMode {
                         () -> gamepad.gamepad.right_stick_button));
 
         // Intake
-        gamepad.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenPressed(() -> intake.spinIntakeIn()).whenReleased(() -> intake.stop());
-        gamepad.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(() -> intake.spinIntakeOut()).whenReleased(() -> intake.stop());
+//        gamepad.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenPressed(() -> intake.spinIntakeIn()).whenReleased(() -> intake.stop());
+//        gamepad.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(() -> intake.spinIntakeOut()).whenReleased(() -> intake.stop());
 
         // Duck Wheel
         gamepad.getGamepadButton(GamepadKeys.Button.B).whenPressed(new DuckCommands.SpinForward(duckWheel)).whenReleased(new DuckCommands.Stop(duckWheel));
@@ -67,6 +71,14 @@ public class TeleOpRed extends CommandOpMode {
         gamepad.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenHeld(new ArmCommands.ArmDown(arm));
         gamepad.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).whenPressed(new ArmCommands.ArmNextPreset(arm, ArmCommands.ArmNextPreset.Direction.UP));
         gamepad.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).whenPressed(new ArmCommands.ArmNextPreset(arm, ArmCommands.ArmNextPreset.Direction.DOWN));
+
+        // Arm Extension System
+//        gamepad.getGamepadButton(GamepadKeys.Button.A).and(gamepad.getGamepadButton(GamepadKeys.Button.DPAD_UP))
+//                .whileActiveOnce(new ExtensionCommands.Extend(extension));
+//        gamepad.getGamepadButton(GamepadKeys.Button.A).and(gamepad.getGamepadButton(GamepadKeys.Button.DPAD_DOWN))
+//                .whileActiveOnce(new ExtensionCommands.Retract(extension));
+        gamepad.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenHeld(new ExtensionCommands.Extend(extension));
+        gamepad.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whileHeld(new ExtensionCommands.Retract(extension));
 
         // mmmfixme:
         //  - telemetry
