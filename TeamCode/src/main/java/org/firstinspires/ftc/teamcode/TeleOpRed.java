@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.command.CommandOpMode;
 import com.arcrobotics.ftclib.command.CommandScheduler;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
@@ -30,6 +32,8 @@ public class TeleOpRed extends CommandOpMode {
 
     @Override
     public void initialize() {
+//        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+
         gamepad = new GamepadEx(gamepad1);
 
         drive = new MecanumDrivetrain(hardwareMap, true);
@@ -41,15 +45,8 @@ public class TeleOpRed extends CommandOpMode {
 
         arm.initialize();
 
-        // Driving
-
-        // We want to turn off velocity control for TeleOp. Velocity control per wheel is not
-        // necessary outside of motion profiled auto.
-        drive.disableVelocityControl();
-
         // Retrieve our pose from the end of the last Autonomous mode, if any.
         drive.setPoseEstimate(AutoToTeleStorage.finalAutoPose);
-
         drive.setDefaultCommand(
                 new MecanumDriveCommand(drive,
                         () -> gamepad.gamepad.left_stick_y,
@@ -104,10 +101,8 @@ public class TeleOpRed extends CommandOpMode {
         loopMin = Math.min(loopMin, delta);
         loopMax = Math.max(loopMax, delta);
         loopAvg += (delta - loopAvg) / Math.min(++loopCnt, 1000);
-
         telemetry.addData("Loop timinngs", "min/avg/max: %,.2fms/%,.2fms/%,.2fms",
                 loopMin / 1_000_000.0, loopAvg / 1_000_000.0, loopMax / 1_000_000.0);
         telemetry.update();
     }
-
 }

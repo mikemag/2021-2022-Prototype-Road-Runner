@@ -76,7 +76,7 @@ public class DriveConstants {
     // Max Velocity: 59.63359955070383
     // Voltage Compensated kF: 12.758903456790124
 
-    public static double MAX_VEL = 60.07898382620717 * 0.90; // Won't reach the maximum vel
+    public static double MAX_VEL = 60.07898382620717 * 0.50; // Won't reach the maximum vel
     public static double MAX_ACCEL = MAX_VEL;
     public static double MAX_ANG_VEL = Math.toRadians(90); // 8.785353018043704 from the MaxAngularVelocityTuner!!
     public static double MAX_ANG_ACCEL = Math.toRadians(90);

@@ -25,4 +25,6 @@ dependencies {
 
     implementation 'org.ftclib.ftclib:core:1.2.0'
     implementation 'org.ftclib.ftclib:vision:1.2.0'
+
+    implementation 'org.openftc:easyopencv:1.5.1'
 }

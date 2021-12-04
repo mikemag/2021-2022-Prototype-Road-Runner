@@ -20,12 +20,8 @@ public class MecanumDrivetrain extends SubsystemBase {
     }
 
     public void drive(double leftY, double leftX, double rightX) {
-        Vector2d input = new Vector2d(-leftY, -leftX).rotated(fieldCentric ? -getHeading() : 0);
+        Vector2d input = new Vector2d(-leftY, -leftX).rotated(fieldCentric ? -drive.getPoseEstimate().getHeading() : 0);
         drive.setWeightedDrivePower(new Pose2d(input.getX(), input.getY(), -rightX));
-    }
-
-    public double getHeading() {
-        return drive.getRawExternalHeading();
     }
 
     public Pose2d getPoseEstimate() {
@@ -57,6 +53,10 @@ public class MecanumDrivetrain extends SubsystemBase {
 
     public void update() {
         drive.update();
+    }
+
+    public void updatePoseEstimate() {
+        drive.updatePoseEstimate();
     }
 
     public boolean isBusy() {
