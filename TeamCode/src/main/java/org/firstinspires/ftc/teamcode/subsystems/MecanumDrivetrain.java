@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
+import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.arcrobotics.ftclib.command.SubsystemBase;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -38,4 +40,26 @@ public class MecanumDrivetrain extends SubsystemBase {
         drive.setPoseEstimate(poseEstimate);
     }
 
+    public TrajectoryBuilder trajectoryBuilder(Pose2d pose2d) {
+        return drive.trajectoryBuilder(pose2d);
+    }
+
+    public void followTrajectoryAsync(Trajectory trajectory) {
+        drive.followTrajectoryAsync(trajectory);
+    }
+
+    public void stopFollowingAsyncTrajectory() {
+        // I'm surprised there isn't a proper way to stop following a traj mid-way.
+        // TODO: stop the motors, and probably toss a new TrajectorySequenceRunner over stopped one.
+        //  - or start an empty trajectory would probably work.
+        drive(0, 0, 0);
+    }
+
+    public void update() {
+        drive.update();
+    }
+
+    public boolean isBusy() {
+        return drive.isBusy();
+    }
 }

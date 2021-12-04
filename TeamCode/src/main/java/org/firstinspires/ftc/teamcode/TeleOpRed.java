@@ -48,7 +48,7 @@ public class TeleOpRed extends CommandOpMode {
         drive.disableVelocityControl();
 
         // Retrieve our pose from the end of the last Autonomous mode, if any.
-        drive.setPoseEstimate(AutoToTeleStorage.currentPose);
+        drive.setPoseEstimate(AutoToTeleStorage.finalAutoPose);
 
         drive.setDefaultCommand(
                 new MecanumDriveCommand(drive,
@@ -86,9 +86,6 @@ public class TeleOpRed extends CommandOpMode {
         //    - let any command or subsystem add telemetry
         //    - have some standard things, like alliance color, field-centric, arm position, etc.
         //    - do in SubSystem::periodic?
-        //  - vision
-        //  - arm extension in/out
-        //  - autos -> tele: preselect the right one, pass pose.
     }
 
     long loopMin = Long.MAX_VALUE;
